@@ -1,19 +1,15 @@
 (function () {
-    const vscode = acuireVsCodeApi()
+    const vscode = acquireVsCodeApi()
 
-    const oldState = vscode.getstate() || {colors: []}
+    // const oldState = vscode.getState() || {colors: []}
+    // let colors = oldState.colors
 
-    let colors = oldState.colors
-
-    // TODO implement
-    updateColorList(colors)
-
-    document.querySelector(".myButton").addEventListener("click", () => {
-        addColor()
+    document.querySelector(".newColorButton").addEventListener("click", () => {
+        vscode.postMessage({type: "newColor"})
     })
 
     // TODO event switch to data
-    window.addEventListener('message', event => {
+    window.addEventListener("message", event => {
         const message = event.data
         switch (message.type) {
             case "addColor": {
@@ -22,14 +18,4 @@
             }
         }
     })
-
-    function updateColorList(colors){
-        vscode.setState({colors: colors})
-    }
-
-    function addColor() {
-        console.log("adding new color")
-        colors.push({ value: "020202"})
-        updateColorList()
-    }
 }())

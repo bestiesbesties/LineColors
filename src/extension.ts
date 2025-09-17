@@ -1,7 +1,8 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new ColorsViewProvider(context.extensionUri)
+  console.log("Initialized LineColors")
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ColorsViewProvider.viewType, provider)
   )
@@ -9,7 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("lineColors.addColor", () => { provider.addColor() } )
   )
-
+  
 }
 
 class ColorsViewProvider implements vscode.WebviewViewProvider {
@@ -38,11 +39,50 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         
         webviewView.webview.html = this._getHTML(webviewView.webview)
 
+        // TODO use other data type here
+        const decorationPreset = vscode.window.createTextEditorDecorationType({
+          isWholeLine: true,
+          backgroundColor: 'rgba(0, 187, 255, 0.72)',
+        });
+
+        // const highlights: Record<string, number[]> = {}
+
+        function applyHighlight(textEditor: vscode.TextEditor | undefined){
+          // const file = textEditor.document.uri.fsPath
+          // const lines = highlights[file]
+          //   if (!lines) return;
+
+          if (!textEditor) {
+            console.log("no texteditor")
+            return;
+          };
+
+            const activeLine = textEditor.selection.active.line
+            const activeRange = new vscode.Range(
+              new vscode.Position(activeLine, 0),
+              new vscode.Position(activeLine, Number.MAX_SAFE_INTEGER)
+            )
+          console.log("setting decorations")
+          textEditor.setDecorations(decorationPreset, [activeRange])
+        }
+
+        // TODO check if these functions habe to leave 1 indent level
+        
+        vscode.workspace.onDidOpenTextDocument(doc => {
+          // from all the text editors search for the 1 holding the document
+          const textEditor = vscode.window.visibleTextEditors.find(textEditor => textEditor.document === doc)
+          // TODO multiple editors possibly holding the document`
+          if (textEditor) {
+            console.log()
+          }
+        })
+
         // recieving some sort of data on call
         webviewView.webview.onDidReceiveMessage(data => {
-          if (data.type =="colorSelected") {
+          if (data.type =="newColor") {
               // logic for if some call is recieved when listened for
-              console.log("call recieved:  'colorSelected'" )
+              console.log(`call recieved:  ${data.type} ${data.value}`)
+              applyHighlight(vscode.window.activeTextEditor)
           }
         });
   }
@@ -74,13 +114,11 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
     <body>
       <ul class="myList">
       </ul>
-        <button class="myButton">Press me</button>
+        <button class="newColorButton">Color activeline</button>
         <script src="${scriptUri}"></script>
     </body>
     </html>
     `
     return html;
-
   }
-
 };
