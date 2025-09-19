@@ -11,14 +11,24 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "linecolors.helloWorld",
-        "title": "Hello World"
-      }
-    ]
-  },
+ 	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"type": "webview",
+					"id": "lineColors.colorsView",
+					"name": "Line Colors"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "lineColors.addColor",
+				"category": "Line Colors",
+				"title": "Add Color"
+			}
+		]
+	},
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
