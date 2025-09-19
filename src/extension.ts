@@ -60,7 +60,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
             const activeLine = textEditor.selection.active.line
             const activeRange = new vscode.Range(
               new vscode.Position(activeLine, 0),
-              new vscode.Position(activeLine, Number.MAX_SAFE_INTEGER)
+              new vscode.Position(activeLine,1)
             )
           console.log("setting decorations")
           textEditor.setDecorations(decorationPreset, [activeRange])
