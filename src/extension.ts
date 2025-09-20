@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = new ColorsViewProvider(context.extensionUri)
@@ -10,19 +11,151 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("lineColors.addColor", () => { provider.addColor() } )
   )
-  
+
+  // context.subscriptions.push(
+  //   vscode.window.onDidChangeActiveTextEditor(activeTextEditor => {
+  //     if (activeTextEditor) {
+  //       console.log("triggered from context")
+  //       provider.applyHighlights(activeTextEditor, activeTextEditor?.document.uri.fsPath)
+  //     }
+  //   })
+  // )
+
+  context.subscriptions.push(
+  vscode.window.onDidChangeVisibleTextEditors(activeTextEditors => {
+    if (activeTextEditors) {
+      activeTextEditors.forEach(activeTextEditor => {
+        console.log("triggered from context2")
+        provider.applyHighlights(activeTextEditor, activeTextEditor?.document.uri.fsPath)
+      })
+    }
+    })
+  )
 }
 
 class ColorsViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "lineColors.colorsView";
   // TODO reposition constructor so not nullable
   private _view?: vscode.WebviewView;
-
+  private _mappingURI?: vscode.Uri
+  private _mapping: Record<string, Record<string, string>> = {};
   constructor(
     // Root of the extension for files etc
     private readonly _extensionUri: vscode.Uri,
-  ) {}
+  ) { 
+    console.log("inside class")
+    this._initializeMappingURI(vscode.workspace.workspaceFolders?.[0] ?? null)
+    this._readMapping(this._mappingURI)
+  }
 
+  // TODO use other data type here
+    private decorationPreset = vscode.window.createTextEditorDecorationType({
+      isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
+      backgroundColor: 'rgba(255, 0, 0, 0.72)',
+    });
+
+    // const highlights: Record<string, number[]> = {}
+    // TODO check if these functions habe to leave 1 indent level
+    // TODO apply smart stacking/merging on insert here
+    private applyNewHighlight(textEditor: vscode.TextEditor | undefined){
+        console.log("call forwarded")
+      // const lines = highlights[file]
+      //   if (!lines) return;
+      if (!textEditor) {
+        console.log("no texteditor")
+        return;
+      }
+      const file = textEditor.document.uri.fsPath // TODO gives absolutepath i.p.v. relative to workspaceFolder
+      const activeLine = textEditor.selection.active.line
+      this._writeMapping(file, [activeLine, activeLine])
+      this.applyHighlights(textEditor, file)
+    }
+    
+    public applyHighlights(textEditor: vscode.TextEditor, file: string){
+      console.log("setting decorations")
+      const ranges: Array<vscode.Range> = []
+      Object.keys(this._mapping[file] ?? {} ).forEach(key => {
+          console.log(`key: ${key}`)
+          let rangeKeys: Array<number> = key.split(",").map(Number)
+          console.log(`rangeKeys ${rangeKeys}`)
+          console.log(`typeof rangeKeys ${typeof rangeKeys}`)
+          ranges.push(
+          new vscode.Range(
+            new vscode.Position(rangeKeys[0], 0),
+            new vscode.Position(rangeKeys[1], 1)
+          )
+        )
+      })
+      
+      console.log("ranges: ", ranges)
+      console.log("pushing to decorations")
+      // Expects you to hold your own state/ manage own data structure for range -> effects
+      textEditor.setDecorations(this.decorationPreset, ranges) // TODO document DecorationOptions hold some potential
+    }
+
+  private _writeMapping(activefile:string, lines:Array<number>){
+    if ((this._mappingURI) && (this._mapping)) {
+        console.log("pushing...")
+        console.log()
+
+        // this in a seperate function
+        this._mapping[activefile] ??= {}
+        this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = "#F54927"  
+        
+        console.log("pushing to local")
+        fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4))
+        console.log("pushing to file")
+    }
+  }
+
+    private _readMapping(mappingURI: vscode.Uri | undefined){
+    console.log(` mappingURI: ${mappingURI}`)
+      if (mappingURI) {
+        const content = fs.readFileSync(mappingURI.fsPath, "utf-8")
+        console.log(` content: ${content}`)
+        console.log(` content: ${typeof content}`)
+
+        const mapping = JSON.parse(content)
+        this._mapping = mapping
+        console.log(" mapping:", mapping)
+        console.log(" this._mapping:", this._mapping)
+      }
+    }
+
+    private _initializeMappingURI(activeFolder:vscode.WorkspaceFolder | null){
+    console.log("inside function")
+    // TODO there can be 0 or 1 or more workspaceFolders (multi-root workspace)
+    const testdata = {}
+    // TODO use {}
+    const data = JSON.stringify(testdata, null, 4)
+
+    console.log(` data: ${data}`)
+    console.log(` activeFolder: ${activeFolder?.uri}`)
+    console.log(` activeFolder: ${activeFolder?.name}`)
+
+    if (activeFolder) {
+      const mappingURI = vscode.Uri.joinPath(activeFolder.uri, "lcm.json")
+      const lcmPath = mappingURI.fsPath
+      if (!fs.existsSync(lcmPath)) {
+            fs.writeFileSync(lcmPath, data)
+            // TODO try except if creating didnt work
+            console.log(`Created LCM file at ${lcmPath} is: ${fs.existsSync(lcmPath)}`)
+            this._mappingURI = mappingURI
+      }
+      else {
+        console.log(`Loading LCM file from ${lcmPath}`)
+        this._mappingURI = mappingURI
+        return true
+      }
+
+      return true
+    }
+    else {
+      console.log("No workspace")
+      return false
+    }
+  }
+  
   // abstract method of WebView building & managing the webview
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -39,42 +172,21 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         
         webviewView.webview.html = this._getHTML(webviewView.webview)
 
-        // TODO use other data type here
-        const decorationPreset = vscode.window.createTextEditorDecorationType({
-          isWholeLine: true,
-          backgroundColor: 'rgba(0, 187, 255, 0.72)',
-        });
-
-        // const highlights: Record<string, number[]> = {}
-
-        function applyHighlight(textEditor: vscode.TextEditor | undefined){
-          // const file = textEditor.document.uri.fsPath
-          // const lines = highlights[file]
-          //   if (!lines) return;
-
-          if (!textEditor) {
-            console.log("no texteditor")
-            return;
-          };
-
-            const activeLine = textEditor.selection.active.line
-            const activeRange = new vscode.Range(
-              new vscode.Position(activeLine, 0),
-              new vscode.Position(activeLine,1)
-            )
-          console.log("setting decorations")
-          textEditor.setDecorations(decorationPreset, [activeRange])
-        }
-
         // TODO check if these functions habe to leave 1 indent level
-        
-        vscode.workspace.onDidOpenTextDocument(doc => {
+        vscode.workspace.onDidChangeTextDocument(doc => {
+
+          console.log("mayor trigger")
           // from all the text editors search for the 1 holding the document
-          const textEditor = vscode.window.visibleTextEditors.find(textEditor => textEditor.document === doc)
+          // const textEditor = vscode.window.visibleTextEditors.find(textEditor => textEditor.document === doc)
+          const textEditor = vscode.window.activeTextEditor
           // TODO multiple editors possibly holding the document`
           if (textEditor) {
-            console.log()
+            console.log(`pushing to applyHighlights -> ${textEditor?.document.uri.fsPath}`)
+            this.applyHighlights(textEditor, textEditor?.document.uri.fsPath)
+          } else {
+            console.log("Muliple editors holding document")
           }
+          console.log(`typeof textEditor ${typeof  textEditor}`)
         })
 
         // recieving some sort of data on call
@@ -82,7 +194,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
           if (data.type =="newColor") {
               // logic for if some call is recieved when listened for
               console.log(`call recieved:  ${data.type} ${data.value}`)
-              applyHighlight(vscode.window.activeTextEditor)
+              this.applyNewHighlight(vscode.window.activeTextEditor)
           }
         });
   }
