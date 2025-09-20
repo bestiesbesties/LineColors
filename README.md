@@ -37,4 +37,7 @@ Initial release of ...
 
 ### Inspired by
 https://code.visualstudio.com/api/get-started/your-first-extension
+
 https://github.com/microsoft/vscode-extension-samples/tree/main/webview-view-sample
+
+https://stackoverflow.com/questions/76315401/ondidchangeactivetexteditor-not-working-for-custom-text-editor
