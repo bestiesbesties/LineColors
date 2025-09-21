@@ -11,6 +11,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("lineColors.addColor", () => { provider.addColor() } )
   )
+ // TODO IMPLEMENT ONCE MULTI SELECTION
+  context.subscriptions.push(
+    vscode.window.onDidChangeTextEditorSelection(() => {
+      console.log("texteditor_selection")
+    })
+  )
 
   // context.subscriptions.push(
   //   vscode.window.onDidChangeActiveTextEditor(activeTextEditor => {
@@ -22,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
   // )
 
   context.subscriptions.push(
-  vscode.window.onDidChangeVisibleTextEditors(activeTextEditors => {
+  vscode.window.onDidChangeVisibleTextEditors((activeTextEditors) => {
     if (activeTextEditors) {
       activeTextEditors.forEach(activeTextEditor => {
         console.log("triggered from context2")
@@ -48,16 +54,34 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
     this._readMapping(this._mappingURI)
   }
 
-  // TODO use other data type here
-    private decorationPreset = vscode.window.createTextEditorDecorationType({
+    // TODO use other data type here
+    // private decorationPreset = vscode.window.createTextEditorDecorationType({
+    //   isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
+    //   backgroundColor: 'rgba(255, 0, 0, 0.72)',
+    // });
+    // TODO search/use reliant overiding for decorations
+    //TODO Document potential transparancy stacking
+    private buildDecorationPreset(colorName:string) {
+      let backgroundColor:string = ""
+      if (colorName == "red") {
+        backgroundColor = 'rgba(255, 0, 0, 1)'
+      } else if (colorName == "green") {
+        backgroundColor = 'rgba(0, 255, 0, 1)'
+      } else if (colorName == "blue") {
+        backgroundColor = 'rgba(0, 0, 255, 1)'
+      } else {
+        backgroundColor = 'rgba(255, 255, 255, 0.6)'
+      }
+    return vscode.window.createTextEditorDecorationType({
       isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
-      backgroundColor: 'rgba(255, 0, 0, 0.72)',
-    });
+      backgroundColor: backgroundColor
+      });
+    } 
 
     // const highlights: Record<string, number[]> = {}
     // TODO check if these functions habe to leave 1 indent level
     // TODO apply smart stacking/merging on insert here
-    private applyNewHighlight(textEditor: vscode.TextEditor | undefined){
+    private applyNewHighlight(textEditor: vscode.TextEditor | undefined, color:string){
         console.log("call forwarded")
       // const lines = highlights[file]
       //   if (!lines) return;
@@ -67,40 +91,57 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
       }
       const file = textEditor.document.uri.fsPath // TODO gives absolutepath i.p.v. relative to workspaceFolder
       const activeLine = textEditor.selection.active.line
-      this._writeMapping(file, [activeLine, activeLine])
+      this._writeMapping(file, [activeLine, activeLine], color)
       this.applyHighlights(textEditor, file)
     }
     
     public applyHighlights(textEditor: vscode.TextEditor, file: string){
       console.log("setting decorations")
-      const ranges: Array<vscode.Range> = []
-      Object.keys(this._mapping[file] ?? {} ).forEach(key => {
+      const rangesRed: Array<vscode.Range> = []
+      const rangesGreen: Array<vscode.Range> = []
+      const rangesBlue: Array<vscode.Range> = []
+
+      Object.entries(this._mapping[file] ?? {} ).forEach(([key, value]) => {
           console.log(`key: ${key}`)
+          console.log(`value: ${value}`)
           let rangeKeys: Array<number> = key.split(",").map(Number)
           console.log(`rangeKeys ${rangeKeys}`)
           console.log(`typeof rangeKeys ${typeof rangeKeys}`)
-          ranges.push(
-          new vscode.Range(
+
+          const entryRange = new vscode.Range(
             new vscode.Position(rangeKeys[0], 0),
             new vscode.Position(rangeKeys[1], 1)
           )
-        )
+          
+          if (value == "red") {
+            rangesRed.push(entryRange)
+          } else if (value == "green") {
+            rangesGreen.push(entryRange)
+          } else if (value == "blue") {
+            rangesBlue.push(entryRange)
+          } else {
+            rangesRed.push(entryRange)
+          }
       })
       
-      console.log("ranges: ", ranges)
+      console.log("rangesRed: ", rangesRed)
+      console.log("rangesGreen: ", rangesGreen)
+      console.log("rangesBlue: ", rangesBlue)
       console.log("pushing to decorations")
       // Expects you to hold your own state/ manage own data structure for range -> effects
-      textEditor.setDecorations(this.decorationPreset, ranges) // TODO document DecorationOptions hold some potential
+      textEditor.setDecorations(this.buildDecorationPreset("red"), rangesRed) // TODO document DecorationOptions hold some potential
+      textEditor.setDecorations(this.buildDecorationPreset("green"), rangesGreen)
+      textEditor.setDecorations(this.buildDecorationPreset("blue"), rangesBlue)
     }
 
-  private _writeMapping(activefile:string, lines:Array<number>){
+  private _writeMapping(activefile:string, lines:Array<number>, color:string){
     if ((this._mappingURI) && (this._mapping)) {
         console.log("pushing...")
         console.log()
 
         // this in a seperate function
         this._mapping[activefile] ??= {}
-        this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = "#F54927"  
+        this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = color 
         
         console.log("pushing to local")
         fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4))
@@ -173,11 +214,11 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.html = this._getHTML(webviewView.webview)
 
         // TODO check if these functions habe to leave 1 indent level
-        vscode.workspace.onDidChangeTextDocument(doc => {
+        vscode.workspace.onDidChangeTextDocument((doc) => {
 
           console.log("mayor trigger")
           // from all the text editors search for the 1 holding the document
-          // const textEditor = vscode.window.visibleTextEditors.find(textEditor => textEditor.document === doc)
+          // const textEditor = vscode.window.visibleTextEditors.find((textEditor) => textEditor.document === doc)
           const textEditor = vscode.window.activeTextEditor
           // TODO multiple editors possibly holding the document`
           if (textEditor) {
@@ -190,11 +231,14 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         })
 
         // recieving some sort of data on call
-        webviewView.webview.onDidReceiveMessage(data => {
-          if (data.type =="newColor") {
+        webviewView.webview.onDidReceiveMessage((data) => {
+          if ((data.type =="newColor") && (data.color)) {
+
+              console.log(`data.type: ${data.type}`)
+              console.log(`value: ${data.color}`)
               // logic for if some call is recieved when listened for
               console.log(`call recieved:  ${data.type} ${data.value}`)
-              this.applyNewHighlight(vscode.window.activeTextEditor)
+              this.applyNewHighlight(vscode.window.activeTextEditor, data.color)
           }
         });
   }
@@ -224,10 +268,14 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         <title>LineColors</title>
       </head>
     <body>
-      <ul class="myList">
-      </ul>
+
         <button class="newColorButton">Color activeline</button>
-        <script src="${scriptUri}"></script>
+      <div class="setColorRow">
+          <button class="colorRed"></button>
+          <button class="colorGreen"></button>
+          <button class="colorBlue"></button>
+      </div>
+      <script src="${scriptUri}"></script>  
     </body>
     </html>
     `

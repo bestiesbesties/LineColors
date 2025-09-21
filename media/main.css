@@ -15,7 +15,7 @@ body {
 	background-color: var(--vscode-editor-background);
 }
 
-button {
+.newColorButton {
 	border: none;
 	padding: var(--input-padding-vertical) var(--input-padding-horizontal);
 	width: 100%;
@@ -26,21 +26,46 @@ button {
 	background: var(--vscode-button-background);
 }
 
-button:hover {
+.newColorButton:hover {
 	cursor: pointer;
 	background: var(--vscode-button-hoverBackground);
 }
 
-button:focus {
+.newColorButton:focus {
 	outline-color: var(--vscode-focusBorder);
 }
 
-button.secondary {
+.newColorButton.secondary {
 	color: var(--vscode-button-secondaryForeground);
 	background: var(--vscode-button-secondaryBackground);
 }
 
-button.secondary:hover {
+.newColorButton.secondary:hover {
 	background: var(--vscode-button-secondaryHoverBackground);
 }
 
+.setColorRow {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+	padding-top: 10px;
+}
+
+.setColorRow button {
+	width: 25px;
+	height: 25px;
+	border: none;
+	cursor: pointer;
+}
+
+.colorRed{
+	background-color: red;
+}
+
+.colorGreen{
+	background-color: Green;
+}
+
+.colorBlue{
+	background-color: Blue;
+}
