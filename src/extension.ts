@@ -12,12 +12,49 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("lineColors.addColor", () => { provider.addColor() } )
   )
  // TODO IMPLEMENT ONCE MULTI SELECTION
+  // context.subscriptions.push(
+  //   vscode.window.onDidChangeTextEditorSelection(() => {
+  //     console.log("texteditor_selection")
+  //   })
+  // )
+
   context.subscriptions.push(
-    vscode.window.onDidChangeTextEditorSelection(() => {
-      console.log("texteditor_selection")
+    vscode.workspace.onDidChangeTextDocument((textDocumentChangeEvent) => {
+      const activeEditor = vscode.window.activeTextEditor
+      if (!activeEditor) {
+        return;
+      }
+
+      if(textDocumentChangeEvent.document == activeEditor.document) {
+ 
+        console.log("text changed in active editor")
+        // TODO ------> nuanced via range and length etc...
+        textDocumentChangeEvent.contentChanges.forEach((change, idx) => {
+          console.log(`x14 --- Change ${idx} ---`);
+          console.log("x14 text len:", change.text.length);
+          console.log("x14 Inserted text:", change.text);
+          console.log("x14 Inserted text: JSON", JSON.stringify(change.text));
+          console.log("x14 Range:", change.range);
+          console.log("x19 Range.start.line:", change.range.start.line); //TODO <----
+          console.log("x19 Range.end.line:", change.range.end.line); //TODO <----
+          console.log("x14 Range.isSingleLine", change.range.isSingleLine);
+          console.log("x14 RangeLength:", change.rangeLength);
+
+          const inserted = (change.text.match(/\n/g) ?? []).length;
+          const removed = change.range.end.line - change.range.start.line;
+          const lineDelta = inserted - removed;
+
+          provider.shift(
+            lineDelta, 
+            textDocumentChangeEvent.document.uri.fsPath, 
+            change.range.end.line,
+            activeEditor)
+        });
+      }
     })
   )
 
+  // TODO research if this can be obsolete if initialization of extension includes pushing decorations 
   // context.subscriptions.push(
   //   vscode.window.onDidChangeActiveTextEditor(activeTextEditor => {
   //     if (activeTextEditor) {
@@ -44,16 +81,75 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
   // TODO reposition constructor so not nullable
   private _view?: vscode.WebviewView;
   private _mappingURI?: vscode.Uri
-  private _mapping: Record<string, Record<string, string>> = {};
+  public _mapping: Record<string, Record<string, string>> = {}; //TODO remove _ or make private again
+  private r: vscode.TextEditorDecorationType;
+  private g: vscode.TextEditorDecorationType;
+  private b: vscode.TextEditorDecorationType;
   constructor(
     // Root of the extension for files etc
     private readonly _extensionUri: vscode.Uri,
   ) { 
     console.log("inside class")
+    this.r = this.buildDecorationPreset("red");
+    this.g = this.buildDecorationPreset("green");
+    this.b = this.buildDecorationPreset("blue");
     this._initializeMappingURI(vscode.workspace.workspaceFolders?.[0] ?? null)
     this._readMapping(this._mappingURI)
   }
 
+  public shift(n:number, fp:string, fromLine:number, textEditor:vscode.TextEditor) {
+    if ((this._mappingURI) && (this._mapping)) {
+
+      const current = this._mapping[fp] ?? {};
+      const shifted: Record<string, any> = {};
+      const after: number[] = []
+
+      for (const key of Object.keys(current)) {
+        console.log("x19 Number(key):", Number(key));
+        console.log("x19 fromLine:", fromLine);
+
+        if (Number(key) > fromLine) {
+          shifted[String(Number(key) + n)] = current[key];
+        } else if (Number(key) == fromLine) {
+          if (n < 0) {
+            console.log("x19 nDeletion:", n);
+            after.push(Number(key) + n - 1)
+            // shifted[key] = current[key];
+          } else if (n > 0) {
+            console.log("x19 nInsertion:", n);
+            after.push(Number(key) + n)
+            shifted[key] = current[key];
+          } else if (n == 0) {
+            console.log("x19 nEqual:", n);
+            shifted[key] = current[key];
+          }
+          
+        } else if (Number(key) < fromLine) {
+          shifted[key] = current[key];
+        }
+      }
+
+      this._mapping[fp] = shifted;
+      console.log("x19 shifted inserted:", JSON.stringify(this._mapping[fp]));
+      console.log("x19 after:", after);
+      fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4));
+      this.applyHighlights(textEditor, fp)
+
+      // const afterRanges: vscode.Range[] = []
+      // after.forEach(elem => {
+      //     const entryRange = new vscode.Range(
+      //       new vscode.Position(elem, 0),
+      //       new vscode.Position(elem, 0)
+      //     )
+      //     afterRanges.push(entryRange)
+      // })
+      console.log("x19 afterpush");
+      if (after.length > 0) {
+        this.r.dispose()
+        this.r = this.buildDecorationPreset("red")
+      }
+    }
+  }
     // TODO use other data type here
     // private decorationPreset = vscode.window.createTextEditorDecorationType({
     //   isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
@@ -70,7 +166,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
       } else if (colorName == "blue") {
         backgroundColor = 'rgba(0, 0, 255, 1)'
       } else {
-        backgroundColor = 'rgba(255, 255, 255, 0.6)'
+        backgroundColor = 'rgba(0, 0, 0, 1)'
       }
     return vscode.window.createTextEditorDecorationType({
       isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
@@ -110,7 +206,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
 
           const entryRange = new vscode.Range(
             new vscode.Position(rangeKeys[0], 0),
-            new vscode.Position(rangeKeys[1], 1)
+            new vscode.Position(rangeKeys[0], 0)
           )
           
           if (value == "red") {
@@ -129,23 +225,23 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
       console.log("rangesBlue: ", rangesBlue)
       console.log("pushing to decorations")
       // Expects you to hold your own state/ manage own data structure for range -> effects
-      textEditor.setDecorations(this.buildDecorationPreset("red"), rangesRed) // TODO document DecorationOptions hold some potential
-      textEditor.setDecorations(this.buildDecorationPreset("green"), rangesGreen)
-      textEditor.setDecorations(this.buildDecorationPreset("blue"), rangesBlue)
+
+      
+      textEditor.setDecorations(this.r, rangesRed) // TODO document DecorationOptions hold some potential
+      textEditor.setDecorations(this.g, rangesGreen)
+      textEditor.setDecorations(this.b, rangesBlue)
     }
 
   private _writeMapping(activefile:string, lines:Array<number>, color:string){
     if ((this._mappingURI) && (this._mapping)) {
-        console.log("pushing...")
-        console.log()
-
+        console.log("pushing to local")
         // this in a seperate function
         this._mapping[activefile] ??= {}
-        this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = color 
+        // this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = color 
+        this._mapping[activefile][`${lines[0]}`] = color 
         
-        console.log("pushing to local")
-        fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4))
         console.log("pushing to file")
+        fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4))
     }
   }
 
@@ -213,7 +309,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         
         webviewView.webview.html = this._getHTML(webviewView.webview)
 
-        // TODO check if these functions habe to leave 1 indent level
+        // TODO check if these functions have to leave 1 indent level
         vscode.workspace.onDidChangeTextDocument((doc) => {
 
           console.log("mayor trigger")
