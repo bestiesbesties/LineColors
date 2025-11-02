@@ -1,65 +1,57 @@
-:root {
-	--container-paddding: 20px;
-	--input-padding-vertical: 6px;
-	--input-padding-horizontal: 4px;
-	--input-margin-vertical: 4px;
-	--input-margin-horizontal: 0;
-}
-
 body {
-	padding: 0 var(--container-paddding);
-	color: var(--vscode-foreground);
-	font-size: var(--vscode-font-size);
-	font-weight: var(--vscode-font-weight);
-	font-family: var(--vscode-font-family);
-	background-color: var(--vscode-editor-background);
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.newColorButton {
-	border: none;
-	padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-	width: 100%;
-	text-align: center;
-	outline: 1px solid transparent;
-	outline-offset: 2px !important;
-	color: var(--vscode-button-foreground);
-	background: var(--vscode-button-background);
+.inner {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  
 }
 
-.newColorButton:hover {
-	cursor: pointer;
-	background: var(--vscode-button-hoverBackground);
+.overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.newColorButton:focus {
-	outline-color: var(--vscode-focusBorder);
+.colorGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 70px);
+  grid-auto-rows: 70px;
+  gap: 6px;
+  width: calc(70px*2 + 6px);
+  height: calc(70px*2 + 6px);
+
 }
 
-.newColorButton.secondary {
-	color: var(--vscode-button-secondaryForeground);
-	background: var(--vscode-button-secondaryBackground);
+.colorGrid button {
+  width: 70px;
+  height: 70px;
+  border: none;
+  cursor: pointer;
 }
 
-.newColorButton.secondary:hover {
-	background: var(--vscode-button-secondaryHoverBackground);
-}
-
-.setColorRow {
-	display: flex;
-	gap: 10px;
-	justify-content: center;
-	padding-top: 10px;
-}
-
-.setColorRow button {
-	width: 25px;
-	height: 25px;
-	border: none;
-	cursor: pointer;
+.middleBlack {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: black;
+  pointer-events: default;
 }
 
 .colorRed{
-	background-color: red;
+	background-color: Red;
 }
 
 .colorGreen{
@@ -68,4 +60,17 @@ body {
 
 .colorBlue{
 	background-color: Blue;
+}
+
+.menu {
+  display : flex;
+  position: relative;
+  bottom: -10px;
+
+}
+
+.menu p {
+  color : white;
+  padding-right: 10px;
+  padding-left: 10px;
 }

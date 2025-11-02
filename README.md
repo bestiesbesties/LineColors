@@ -1,43 +1,29 @@
-# linecolors README
+# linecolors 
 
-This is the README for your extension "linecolors". After writing up a brief description, we recommend including the following sections.
+This extension allowes you to color the background of specific lines of code. These adjusments are strictly visual and help for imediate identification.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Color a line in 1 of the following of 3 colors. Red, green or blue.
 
-For example if there is an image subfolder under your extension project workspace:
+Automatically shift the colored lines with insertions or deletions in your code,
 
-\!\[feature X\]\(images/feature-x.png\)
+> Tip: Share the auto generated LCM.json with others for a central-definition of which lines need which color.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+Pre-release version intended for performance and UX upgrades on the initial prototype.
 
-### 1.0.0
+### 0.0.1
 
 Initial release of ...
 
-### Inspired by
+### References
 https://code.visualstudio.com/api/get-started/your-first-extension
 
 https://github.com/microsoft/vscode-extension-samples/tree/main/webview-view-sample
 
 https://stackoverflow.com/questions/76315401/ondidchangeactivetexteditor-not-working-for-custom-text-editor
+
+https://code.visualstudio.com/api/working-with-extensions/publishing-extension
