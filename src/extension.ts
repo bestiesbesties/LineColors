@@ -34,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
           console.log("x14 text len:", change.text.length);
           console.log("x14 Inserted text:", change.text);
           console.log("x14 Inserted text: JSON", JSON.stringify(change.text));
+          const exitString = JSON.stringify(change.text)
           console.log("x14 Range:", change.range);
           console.log("x19 Range.start.line:", change.range.start.line); //TODO <----
           console.log("x19 Range.end.line:", change.range.end.line); //TODO <----
@@ -44,11 +45,36 @@ export function activate(context: vscode.ExtensionContext) {
           const removed = change.range.end.line - change.range.start.line;
           const lineDelta = inserted - removed;
 
+            const lineNumber = change.range.start.line;
+            const line = textDocumentChangeEvent.document.lineAt(lineNumber);
+            const oldLineText = textDocumentChangeEvent.document.getText(change.range); 
+            // TODO + get previous line char range
+            const currentInsertPos = change.range.start.character;
+            let hasEnterAtStart = false
+            let hasEnterInBetween = false
+            let hasEnterAtEnd = false
+
+            console.log("x20 currentInsertPos:", currentInsertPos);
+            if (currentInsertPos === 0) {
+                hasEnterAtStart = true
+            } else if (currentInsertPos === line.text.length) { // TODO + this is probably always end of line including the new data so the split will be invalid
+                console.log("x20 oldLineText.length:", oldLineText.length);
+                console.log("x20 change.range.end.character:", change.range.end.character);
+                console.log("x20 line.text.length:", line.text.length);
+                hasEnterAtEnd = true
+            } else {
+                hasEnterInBetween = true
+            }
+
           provider.shift(
             lineDelta, 
             textDocumentChangeEvent.document.uri.fsPath, 
             change.range.end.line,
-            activeEditor)
+            activeEditor,
+            hasEnterAtStart,
+            hasEnterInBetween,
+            hasEnterAtEnd
+          )
         });
       }
     })
@@ -97,7 +123,7 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
     this._readMapping(this._mappingURI)
   }
 
-  public shift(n:number, fp:string, fromLine:number, textEditor:vscode.TextEditor) {
+  public shift(n:number, fp:string, fromLine:number, textEditor:vscode.TextEditor, hasEnterAtStart:boolean, hasEnterInBetween:boolean, hasEnterAtEnd:boolean) {
     if ((this._mappingURI) && (this._mapping)) {
 
       const current = this._mapping[fp] ?? {};
@@ -113,12 +139,42 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         } else if (Number(key) == fromLine) {
           if (n < 0) {
             console.log("x19 nDeletion:", n);
-            after.push(Number(key) + n - 1)
+            shifted[String(Number(key) + n)] = current[key];
+            after.push(Number(key) + n + 1)
             // shifted[key] = current[key];
           } else if (n > 0) {
             console.log("x19 nInsertion:", n);
-            after.push(Number(key) + n)
-            shifted[key] = current[key];
+          
+            if (hasEnterAtStart) {
+               console.log("x19 exitStart:", hasEnterAtStart);
+               shifted[String(Number(key) + n)] = current[key];
+              after.push(Number(key) + n)
+              
+            } else if (hasEnterAtEnd) {
+              console.log("x19 exitEnd:", hasEnterAtEnd);
+              console.log("x33 key:", key); // TODO + what is this key because it might need + 1 for empty color
+              console.log("x34 current[key]:", current[key]); 
+              shifted[key] = current[key];
+              console.log("x34 shifted:", shifted); 
+              shifted[String(Number(key) + 1)] = current[key];
+              console.log("x34 shifted +1:", shifted); 
+              
+
+            } else if (hasEnterInBetween) {
+              console.log("x19 exitBetween:", hasEnterInBetween);
+              if (n > 0) {
+                for (let i = 1; i <= n; i++) {
+                  console.log("x19 positive:");
+                  shifted[String(Number(key) + i)] = current[key];
+                }
+              } else {
+                for (let i = 1; i >= n; i--) {
+                  console.log("x19 negative:");
+                  shifted[String(Number(key) + i)] = current[key];
+                }
+              }
+            }
+
           } else if (n == 0) {
             console.log("x19 nEqual:", n);
             shifted[key] = current[key];
@@ -143,11 +199,11 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
       //     )
       //     afterRanges.push(entryRange)
       // })
-      console.log("x19 afterpush");
-      if (after.length > 0) {
-        this.r.dispose()
-        this.r = this.buildDecorationPreset("red")
-      }
+    //   console.log("x19 afterpush");
+    //   if (after.length > 0) {
+    //     this.r.dispose()
+    //     this.r = this.buildDecorationPreset("red")
+    //   }
     }
   }
     // TODO use other data type here
@@ -335,6 +391,8 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
               // logic for if some call is recieved when listened for
               console.log(`call recieved:  ${data.type} ${data.value}`)
               this.applyNewHighlight(vscode.window.activeTextEditor, data.color)
+          } else {
+            console.log("data", data)
           }
         });
   }
@@ -364,13 +422,28 @@ class ColorsViewProvider implements vscode.WebviewViewProvider {
         <title>LineColors</title>
       </head>
     <body>
+    
+    <div class="inner">
+      <div class="overlay">
 
-        <button class="newColorButton">Color activeline</button>
-      <div class="setColorRow">
+        <div class="colorGrid">
           <button class="colorRed"></button>
           <button class="colorGreen"></button>
           <button class="colorBlue"></button>
+          <button class="colorSelected"></button>
+          <div class="middleBlack"></div>
+        </div>
+
+        <div class="menu">
+          <p> EXP </p>
+          <p> IMP </p>
+          <p> TOG </p>
+          <p> RES </p>
+          <p> SETT </p>
+        </div>
+        
       </div>
+     </div>
       <script src="${scriptUri}"></script>  
     </body>
     </html>
