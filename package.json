@@ -2,6 +2,10 @@
   "name": "linecolors",
   "displayName": "LineColors",
   "publisher" : "bestiesbesties",
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/bestiesbesties/LineColors.git"
+  },
   "description": "Visually group lines of code together.",
   "version": "0.0.1",
   "engines": {
