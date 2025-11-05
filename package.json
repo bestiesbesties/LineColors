@@ -1,6 +1,7 @@
 {
   "name": "linecolors",
   "displayName": "LineColors",
+  "publisher" : "bestiesbesties",
   "description": "Visually group lines of code together.",
   "version": "0.0.1",
   "engines": {
