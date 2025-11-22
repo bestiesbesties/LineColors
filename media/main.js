@@ -9,7 +9,6 @@
     //     vscode.postMessage({ color: e.target.value });
     // });
 
-    let activeColor = "white"
     // const newColorButton = document.querySelector(".newColorButton")
     // newColorButton.addEventListener("click", () => {
     //     vscode.postMessage({type: "newColor", color : activeColor})
@@ -20,8 +19,12 @@
         element.addEventListener("click", () => {
             // getComputedStyle to get CSS
             console.log(`color pressed ${element.style.backgroundColor}`);
-            activeColor = element.className.slice(5).toLowerCase()
-            vscode.postMessage({type: "newColor", color : activeColor})
+            const activation = element.className.slice(5).toLowerCase()
+            if (activation == "remove") {
+                vscode.postMessage({type: "removeColor" })
+            } else {
+                vscode.postMessage({type: "addColor", color : activation})
+            }
         });
     });
     

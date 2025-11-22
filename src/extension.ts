@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import ColorsViewProvider from "./ColorsViewProvider"
 
 export function activate(context: vscode.ExtensionContext) {
-  const provider = new ColorsViewProvider(context.extensionUri, context) // TODO provide only context
+  const provider = new ColorsViewProvider(context) // TODO provide only context
   console.log("Initialized LineColors")
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ColorsViewProvider.viewType, provider)
@@ -76,7 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
             hasEnterAtEnd
           )
         });
-      }
+      } 
     })
   )
 

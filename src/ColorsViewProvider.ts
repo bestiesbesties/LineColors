@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { getHTML } from "./utils"
 
 export default class ColorsViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "lineColors.colorsView";
@@ -10,16 +11,17 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
   private r: vscode.TextEditorDecorationType;
   private g: vscode.TextEditorDecorationType;
   private b: vscode.TextEditorDecorationType;
+  private _extensionUri: vscode.Uri
   constructor(
     // Root of the extension for files etc
-    private readonly _extensionUri: vscode.Uri,
     private readonly _extensionContext: vscode.ExtensionContext 
   ) { 
     console.log("inside class")
     this.r = this.buildDecorationPreset("red");
     this.g = this.buildDecorationPreset("green");
     this.b = this.buildDecorationPreset("blue");
-    this._loadMapping()
+    this._extensionUri  = this._extensionContext.extensionUri;
+    this._mapping = this._extensionContext.globalState.get("lcm", {})
   }
 
   public shift(n:number, fp:string, fromLine:number, textEditor:vscode.TextEditor, hasEnterAtStart:boolean, hasEnterInBetween:boolean, hasEnterAtEnd:boolean) {
@@ -87,31 +89,10 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
       this._mapping[fp] = shifted;
       console.log("x19 shifted inserted:", JSON.stringify(this._mapping[fp]));
       console.log("x19 after:", after);
-      fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4));
+      this._extensionContext.globalState.update("lcm", this._mapping);
       this.applyHighlights(textEditor, fp)
-
-      // const afterRanges: vscode.Range[] = []
-      // after.forEach(elem => {
-      //     const entryRange = new vscode.Range(
-      //       new vscode.Position(elem, 0),
-      //       new vscode.Position(elem, 0)
-      //     )
-      //     afterRanges.push(entryRange)
-      // })
-    //   console.log("x19 afterpush");
-    //   if (after.length > 0) {
-    //     this.r.dispose()
-    //     this.r = this.buildDecorationPreset("red")
-    //   }
     }
   }
-    // TODO use other data type here
-    // private decorationPreset = vscode.window.createTextEditorDecorationType({
-    //   isWholeLine: true, // TODO Document that a whole line is not forced and holds more potential
-    //   backgroundColor: 'rgba(255, 0, 0, 0.72)',
-    // });
-    // TODO search/use reliant overiding for decorations
-    //TODO Document potential transparancy stacking
     private buildDecorationPreset(colorName:string) {
       let backgroundColor:string = ""
       if (colorName == "red") {
@@ -128,28 +109,21 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
       backgroundColor: backgroundColor
       });
     } 
-
-    // const highlights: Record<string, number[]> = {}
-    // TODO check if these functions habe to leave 1 indent level
-    // TODO apply smart stacking/merging on insert here
-    private applyNewHighlight(textEditor: vscode.TextEditor | undefined, color:string){
+    private updateHighlight(textEditor: vscode.TextEditor | undefined, color:string | null){
         console.log("call forwarded")
-      // const lines = highlights[file]
-      //   if (!lines) return;
       if (!textEditor) {
-        console.log("no texteditor")
+        console.log("Error: no texteditor")
         return;
       }
-      console.log("x40 1")
       const file = textEditor.document.uri.fsPath // TODO gives absolutepath i.p.v. relative to workspaceFolder
       const activeLine = textEditor.selection.active.line
-      console.log("x40 2")
-      this._writeMapping(file, [activeLine, activeLine], color)
-      console.log("x40 3")
+      if (color) {
+
+      }
+      this.updateMapping(file, [activeLine, activeLine], color)
       this.applyHighlights(textEditor, file)
-      console.log("x40 4")
     }
-    
+
     public applyHighlights(textEditor: vscode.TextEditor, file: string){
       console.log("setting decorations")
       const rangesRed: Array<vscode.Range> = []
@@ -191,25 +165,7 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
       textEditor.setDecorations(this.b, rangesBlue)
     }
 
-  private _writeMapping(activefile:string, lines:Array<number>, color:string){
-    if (this._mapping) {
-        console.log("pushing to local")
-        // this in a seperate function
-        this._mapping[activefile] ??= {}
-        // this._mapping[activefile][`${lines[0]}, ${lines[1]}`] = color 
-        this._mapping[activefile][`${lines[0]}`] = color 
-        
-        console.log("pushed to local")
-        // fs.writeFileSync(this._mappingURI.fsPath, JSON.stringify(this._mapping, null, 4))
-        this._extensionContext.globalState.update("lcm", this._mapping)
-        console.log("pushed to local")
-    }
-  }
 
-    private _loadMapping() {
-      this._mapping = this._extensionContext.globalState.get("lcm", {})
-    }
-  
   // abstract method of WebView building & managing the webview
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -224,7 +180,7 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
           localResourceRoots : [this._extensionUri]
         };
         
-        webviewView.webview.html = this._getHTML(webviewView.webview)
+        webviewView.webview.html = getHTML(webviewView.webview, this._extensionUri)
 
         // TODO check if these functions have to leave 1 indent level
         vscode.workspace.onDidChangeTextDocument((doc) => {
@@ -243,15 +199,13 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
           console.log(`typeof textEditor ${typeof  textEditor}`)
         })
 
-        // recieving some sort of data on call
-        webviewView.webview.onDidReceiveMessage((data) => {
-          if ((data.type =="newColor") && (data.color)) {
 
-              console.log(`data.type: ${data.type}`)
-              console.log(`value: ${data.color}`)
-              // logic for if some call is recieved when listened for
-              console.log(`call recieved:  ${data.type} ${data.value}`)
-              this.applyNewHighlight(vscode.window.activeTextEditor, data.color)
+        webviewView.webview.onDidReceiveMessage((data) => {
+          console.log(`call recieved:  ${data.type} ${data.value}`)
+          if ((data.type =="addColor") && (data.color)) {
+            this.updateHighlight(vscode.window.activeTextEditor, data.color)
+          } else if ((data.type =="removeColor")) {
+            this.updateHighlight(vscode.window.activeTextEditor, null)
           } else {
             console.log("data", data)
           }
@@ -266,49 +220,13 @@ export default class ColorsViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  private _getHTML(webview: vscode.Webview) {
-    //fs is File System
-    // URI is a filosophy of Uniform Resource Identifier
-    // vscode.Uri.joinPath is fspath in a uniform way
-    // constant of a convertion of an actual filepath (the webview is sandboxed)
-    const scriptUri =  webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "main.js"))
-    const stylingUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "main.css"))
-
-    // HTML string with injection of resources such as scripts or styling
-    const html:string = `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <link href="${stylingUri}" rel="stylesheet">
-        <title>LineColors</title>
-      </head>
-    <body>
-    
-    <div class="inner">
-      <div class="overlay">
-
-        <div class="colorGrid">
-          <button class="colorRed"></button>
-          <button class="colorGreen"></button>
-          <button class="colorBlue"></button>
-          <button class="colorSelected"></button>
-          <div class="middleBlack"></div>
-        </div>
-
-        <div class="menu">
-          <p> EXP </p>
-          <p> IMP </p>
-          <p> TOG </p>
-          <p> RES </p>
-          <p> SETT </p>
-        </div>
-        
-      </div>
-     </div>
-      <script src="${scriptUri}"></script>  
-    </body>
-    </html>
-    `
-    return html;
-  }
+  private updateMapping(activefile:string, lines:Array<number>, color:string | null) {
+    this._mapping[activefile] ??= {}
+    if (color) {
+        this._mapping[activefile][`${lines[0]}`] = color 
+    } else {
+        delete this._mapping[activefile][`${lines[0]}`]
+    }
+    this._extensionContext.globalState.update("lcm", this._mapping)
+}
 };
