@@ -12,26 +12,15 @@ export function getHTML(webview: vscode.Webview, extensionUri: vscode.Uri) {
         <title>LineColors</title>
       </head>
     <body>
-    
     <div class="inner">
       <div class="overlay">
-
         <div class="colorGrid">
-          <button class="colorRed"></button>
-          <button class="colorGreen"></button>
-          <button class="colorBlue"></button>
+          <button class="color0"></button>
+          <button class="color1"></button>
+          <button class="color2"></button>
           <button class="colorRemove"></button>
           <div class="middleBlack"></div>
         </div>
-
-        <div class="menu">
-          <p> EXP </p>
-          <p> IMP </p>
-          <p> TOG </p>
-          <p> RES </p>
-          <p> SETT </p>
-        </div>
-        
       </div>
      </div>
       <script src="${scriptUri}"></script>  

@@ -2,21 +2,15 @@ import * as vscode from "vscode";
 import ColorsViewProvider from "./ColorsViewProvider"
 
 export function activate(context: vscode.ExtensionContext) {
-  const provider = new ColorsViewProvider(context) // TODO provide only context
+  const provider = new ColorsViewProvider(context)
   console.log("Initialized LineColors")
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ColorsViewProvider.viewType, provider)
   )
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("lineColors.addColor", () => { provider.addColor() } )
-  )
- // TODO IMPLEMENT ONCE MULTI SELECTION
-  // context.subscriptions.push(
-  //   vscode.window.onDidChangeTextEditorSelection(() => {
-  //     console.log("texteditor_selection")
-  //   })
-  // )
+    vscode.commands.registerCommand("lineColors.drop", () => { provider.drop() }),
+  );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((textDocumentChangeEvent) => {
@@ -79,16 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
       } 
     })
   )
-
-  // TODO research if this can be obsolete if initialization of extension includes pushing decorations 
-  // context.subscriptions.push(
-  //   vscode.window.onDidChangeActiveTextEditor(activeTextEditor => {
-  //     if (activeTextEditor) {
-  //       console.log("triggered from context")
-  //       provider.applyHighlights(activeTextEditor, activeTextEditor?.document.uri.fsPath)
-  //     }
-  //   })
-  // )
 
   context.subscriptions.push(
   vscode.window.onDidChangeVisibleTextEditors((activeTextEditors) => {
