@@ -26,13 +26,13 @@
 				}
 			]
 		},
-		"commands": [
-			{
-				"command": "lineColors.addColor",
-				"category": "Line Colors",
-				"title": "Add Color"
-			}
-		]
+    "keybindings" : [
+      {
+        "command": "lineColors.drop",
+        "key": "cmd+d",
+        "when": "editorTextFocus"
+      }
+    ]
 	},
   "scripts": {
     "vscode:prepublish": "npm run compile",
