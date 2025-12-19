@@ -28,7 +28,7 @@
     "keybindings" : [
       {
         "command": "lineColors.drop",
-        "key": "cmd+d",
+        "key": "ctrl+d",
         "when": "editorTextFocus"
       }
     ]
