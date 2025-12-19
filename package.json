@@ -7,19 +7,18 @@
   "url": "https://github.com/bestiesbesties/LineColors.git"
   },
   "description": "Visually group lines of code together.",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.103.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "categories": ["Other", "Visualization", "Themes"],
   "activationEvents": [],
   "main": "./out/extension.js",
  	"contributes": {
 		"views": {
 			"explorer": [
 				{
+          "icon" : "./img/LineColors_icon_128x128.png",
 					"type": "webview",
 					"id": "lineColors.colorsView",
 					"name": "Line Colors"
@@ -29,7 +28,7 @@
     "keybindings" : [
       {
         "command": "lineColors.drop",
-        "key": "cmd+d",
+        "key": "ctrl+d",
         "when": "editorTextFocus"
       }
     ]
