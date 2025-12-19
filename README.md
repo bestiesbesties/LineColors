@@ -8,7 +8,7 @@ It expands your workflow with immediate recognition, cross referencing or groupi
 
 This extension is effectively purely visual and does not change your files or code.
 
-![demo.gif](https://raw.githubusercontent.com/bestiesbesties/LineColors/master/img/LineColors_demo.gif)
+![demo.gif](https://raw.githubusercontent.com/bestiesbesties/LineColors/main/img/LineColors_demo.gif)
 
 ## Features
 - Color any line in the texteditor to red, green or blue.
