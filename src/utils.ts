@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
+
 export function getHTML(webview: vscode.Webview, extensionUri: vscode.Uri) {
     const scriptUri =  webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media", "main.js"))
     const stylingUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "media", "main.css"))
 
-    // HTML string with injection of resources such as scripts or styling
     const html:string = `
     <!DOCTYPE html>
     <html lang="en">
@@ -23,7 +23,7 @@ export function getHTML(webview: vscode.Webview, extensionUri: vscode.Uri) {
         </div>
       </div>
      </div>
-      <script src="${scriptUri}"></script>  
+      <script src="${scriptUri}"></script>
     </body>
     </html>
     `

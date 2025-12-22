@@ -2,12 +2,13 @@
   "name": "linecolors",
   "displayName": "LineColors",
   "publisher" : "bestiesbesties",
+  "icon": "img/LineColors_icon_128x128.png",
   "repository": {
   "type": "git",
   "url": "https://github.com/bestiesbesties/LineColors.git"
   },
   "description": "Visually group lines of code together.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.103.0"
   },
