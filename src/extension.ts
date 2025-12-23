@@ -5,8 +5,20 @@ import { calculateShifting } from "./shifting"
 export function activate(context: vscode.ExtensionContext) {
   const provider = new ColorsViewProvider(context)
   console.log("Initialized LineColors")
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ColorsViewProvider.viewType, provider)
+  )
+
+    context.subscriptions.push(
+    vscode.commands.registerCommand("lineColors.reset", () => {
+      provider.reset()
+      const activeEditor = vscode.window.activeTextEditor
+      if (activeEditor) {
+        provider.applyHighlights(activeEditor, activeEditor?.document.uri.toString())
+      }
+      vscode.window.showInformationMessage("LineColors has been resetted.");
+    })
   )
 
   context.subscriptions.push(

@@ -34,6 +34,11 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  public reset() {
+    this._documentMapping = {};
+    this._extensionContext.globalState.update("lcdm", this._documentMapping);
+  }
+
   public shift(shiftStatus:ShiftStatus) {
     if (this._documentMapping) {
       const current = this._documentMapping[shiftStatus.fp] ?? {};

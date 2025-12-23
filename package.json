@@ -13,9 +13,17 @@
     "vscode": "^1.103.0"
   },
   "categories": ["Other", "Visualization", "Themes"],
+  "extensionKind": ["ui", "workspace"],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
  	"contributes": {
+    "commands" : [
+      {
+        "command": "lineColors.reset",
+        "title": "LineColors: Reset"
+      }
+    ],
 		"views": {
 			"explorer": [
 				{
