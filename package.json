@@ -8,14 +8,22 @@
   "url": "https://github.com/bestiesbesties/LineColors.git"
   },
   "description": "Visually group lines of code together.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.103.0"
   },
   "categories": ["Other", "Visualization", "Themes"],
+  "extensionKind": ["ui", "workspace"],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
  	"contributes": {
+    "commands" : [
+      {
+        "command": "lineColors.reset",
+        "title": "LineColors: Reset"
+      }
+    ],
 		"views": {
 			"explorer": [
 				{
