@@ -8,7 +8,7 @@
   "url": "https://github.com/bestiesbesties/LineColors.git"
   },
   "description": "Visually group lines of code together.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.103.0"
   },

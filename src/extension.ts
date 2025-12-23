@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ColorsViewProvider } from "./ColorsViewProvider"
+import { ColorsViewProvider } from "./provider"
 import { calculateShifting } from "./shifting"
 
 export function activate(context: vscode.ExtensionContext) {

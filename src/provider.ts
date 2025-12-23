@@ -6,7 +6,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "lineColors.colorsView";
   // TODO reposition constructor so not nullable
   private _view?: vscode.WebviewView;
-  public _documentMapping: Record<string, Record<string, number>> = {}; //TODO remove _ or make private again
+  public _documentsMapping: Record<string, Record<string, number>> = {}; //TODO remove _ or make private again
   public _colorMapping : string[]
   public _decorationsMapping : vscode.TextEditorDecorationType[]
   public _activeColorIndex: number
@@ -16,7 +16,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
   ) {
     console.log("Initializing ColorsViewProvider")
     this._extensionUri  = this._extensionContext.extensionUri;
-    this._documentMapping = this._extensionContext.globalState.get("lcdm", {})// TODO documentSmapping
+    this._documentsMapping = this._extensionContext.globalState.get("lcdm", {})// TODO documentSmapping
     this._colorMapping = this._extensionContext.globalState.get("lccm", ['rgba(255, 0, 0, 0.5)', 'rgba(0, 255, 0, 0.5)', 'rgba(0, 0, 255, 0.5)'])
     this._decorationsMapping = []
     for (let i = 0; i <= 2; i++) {
@@ -35,16 +35,16 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
   }
 
   public reset() {
-    this._documentMapping = {};
-    this._extensionContext.globalState.update("lcdm", this._documentMapping);
+    this._documentsMapping = {};
+    this._extensionContext.globalState.update("lcdm", this._documentsMapping);
   }
 
   public shift(shiftStatus:ShiftStatus) {
-    if (this._documentMapping) {
-      const current = this._documentMapping[shiftStatus.fp] ?? {};
-      this._documentMapping[shiftStatus.fp] = shiftDocumentMapping(current, shiftStatus);
-      console.log("x19 shifted inserted:", JSON.stringify(this._documentMapping[shiftStatus.fp]));
-      this._extensionContext.globalState.update("lcdm", this._documentMapping);
+    if (this._documentsMapping) {
+      const current = this._documentsMapping[shiftStatus.fp] ?? {};
+      this._documentsMapping[shiftStatus.fp] = shiftDocumentMapping(current, shiftStatus);
+      console.log("x19 shifted inserted:", JSON.stringify(this._documentsMapping[shiftStatus.fp]));
+      this._extensionContext.globalState.update("lcdm", this._documentsMapping);
     }
   }
     private buildDecorationPreset(color:string) {
@@ -57,7 +57,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
     public applyHighlights(textEditor: vscode.TextEditor, file: string){
       console.log("applyHighlights")
       const rangesHolder: vscode.Range[][] = [[],[],[]]
-      Object.entries(this._documentMapping[file] ?? {} ).forEach(([key, value]) => {
+      Object.entries(this._documentsMapping[file] ?? {} ).forEach(([key, value]) => {
           console.log(`key: ${key} value: ${value}`)
           let rangeKeys: Array<number> = key.split(",").map(Number)
           console.log(`rangeKeys ${rangeKeys}`)
@@ -110,17 +110,17 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
   }
 
   private updateMapping(activefile:string, lines:Array<number>, colorIndex:number) {
-    this._documentMapping[activefile] ??= {}
-    if (this._documentMapping[activefile][`${lines[0]}`] == colorIndex) {
-      delete this._documentMapping[activefile][`${lines[0]}`]
+    this._documentsMapping[activefile] ??= {}
+    if (this._documentsMapping[activefile][`${lines[0]}`] == colorIndex) {
+      delete this._documentsMapping[activefile][`${lines[0]}`]
     } else {
-      this._documentMapping[activefile][`${lines[0]}`] = colorIndex
+      this._documentsMapping[activefile][`${lines[0]}`] = colorIndex
     }
-    this._extensionContext.globalState.update("lcdm", this._documentMapping)
+    this._extensionContext.globalState.update("lcdm", this._documentsMapping)
   }
 
   public drop(selection:vscode.Selection, fp:string){
-    console.log("dropped", this._documentMapping)
+    console.log("dropped", this._documentsMapping)
     console.log(`Dropped with this._activeColorIndex: ${this._activeColorIndex}`)
     const startLine = selection.start.line
     const endLine = selection.end.line
@@ -134,7 +134,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
 
     private lineInDocumentMapping(file:string, line:Number) {
       console.log("lineInDocumentMapping")
-      const documentMapping = this._documentMapping[file]
+      const documentMapping = this._documentsMapping[file]
       if (documentMapping) {
         for (const key of Object.keys(documentMapping)) {
           if (Number(key) == line) {
