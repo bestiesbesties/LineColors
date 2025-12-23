@@ -32,7 +32,7 @@ export function calculateShifting(textDocumentChangeEvent:vscode.TextDocumentCha
 
         const shiftStatus:ShiftStatus = {
             delta : delta,
-            fp : textDocumentChangeEvent.document.uri.fsPath,
+            fp : textDocumentChangeEvent.document.uri.toString(),
             fromLine : change.range.end.line,
             shiftEnterPosition : shiftEnterPosition
         }

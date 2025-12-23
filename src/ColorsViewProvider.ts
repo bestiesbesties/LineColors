@@ -93,8 +93,8 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
           // const textEditor = vscode.window.visibleTextEditors.find((textEditor) => textEditor.document === doc)
           const textEditor = vscode.window.activeTextEditor // TODO multiple editors possibly holding the document`
           if (textEditor) {
-            console.log(`pushing to applyHighlights -> ${textEditor?.document.uri.fsPath}`)
-            this.applyHighlights(textEditor, textEditor?.document.uri.fsPath)
+            console.log(`pushing to applyHighlights -> ${textEditor?.document.uri.toString()}`)
+            this.applyHighlights(textEditor, textEditor?.document.uri.toString())
           } else {
             console.log("Muliple editors holding document")
           }
@@ -119,24 +119,17 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
     this._extensionContext.globalState.update("lcdm", this._documentMapping)
   }
 
-  public drop(){
+  public drop(selection:vscode.Selection, fp:string){
+    console.log("dropped", this._documentMapping)
     console.log(`Dropped with this._activeColorIndex: ${this._activeColorIndex}`)
-    const textEditor = vscode.window.activeTextEditor
-    if (!textEditor) {
-      console.log("Error: no active texteditor")
-      return;
-    }
-    const selection = textEditor.selection
     const startLine = selection.start.line
     const endLine = selection.end.line
-    const activeFilepath = textEditor.document.uri.fsPath
 
     for (let line = startLine; line <= endLine; line++) {
       console.log("line", line)
-      this.lineInDocumentMapping(activeFilepath, line)
-      this.updateMapping(activeFilepath, [line, line], this._activeColorIndex)
+      this.lineInDocumentMapping(fp, line)
+      this.updateMapping(fp, [line, line], this._activeColorIndex)
     }
-    this.applyHighlights(textEditor, textEditor.document.fileName)
     }
 
     private lineInDocumentMapping(file:string, line:Number) {

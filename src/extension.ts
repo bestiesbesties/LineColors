@@ -12,19 +12,24 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
     vscode.commands.registerCommand("lineColors.reset", () => {
+      console.log("Resetting LineColors globals");
       provider.reset()
       const activeEditor = vscode.window.activeTextEditor
       if (activeEditor) {
-        provider.applyHighlights(activeEditor, activeEditor?.document.uri.toString())
+        provider.applyHighlights(activeEditor, activeEditor.document.uri.toString())
       }
-      vscode.window.showInformationMessage("LineColors has been resetted.");
+      vscode.window.showInformationMessage("LineColors has been totally reset.");
     })
   )
 
   context.subscriptions.push(
     vscode.commands.registerCommand("lineColors.drop", () => {
       console.log("Dropping active color");
-      provider.drop()
+      const activeEditor = vscode.window.activeTextEditor
+      if (activeEditor) {
+        provider.drop(activeEditor.selection, activeEditor.document.uri.toString())
+        provider.applyHighlights(activeEditor, activeEditor.document.uri.toString())
+      }
      }),
   );
 
@@ -45,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log("Recieved visibility change")
     if (activeTextEditors) {
       activeTextEditors.forEach(activeTextEditor => {
-        provider.applyHighlights(activeTextEditor, activeTextEditor?.document.uri.fsPath)
+        provider.applyHighlights(activeTextEditor, activeTextEditor?.document.uri.toString())
       })
     }
     })
