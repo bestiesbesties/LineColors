@@ -28,7 +28,7 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
 
   private initialHighlights(){
     const activeTextEditor = vscode.window.activeTextEditor
-    const file = vscode.window.activeTextEditor?.document.fileName
+    const file = vscode.window.activeTextEditor?.document.uri.toString()
     if ((activeTextEditor) && (file)) {
       this.applyHighlights(activeTextEditor, file)
     }
