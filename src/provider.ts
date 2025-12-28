@@ -1,26 +1,23 @@
 import * as vscode from "vscode";
-import { getHTML } from "./utils"
+import { getColorMapping } from "./utils"
 import { shiftDocumentMapping, ShiftStatus } from "./shifting";
 
-export class ColorsViewProvider implements vscode.WebviewViewProvider {
+export class Provider {
   public static readonly viewType = "lineColors.colorsView";
   // TODO reposition constructor so not nullable
-  private _view?: vscode.WebviewView;
   public _documentsMapping: Record<string, Record<string, number>> = {}; //TODO remove _ or make private again
-  public _colorMapping : string[]
+  public _colorMapping : Record<string, string>[] //TODO switch to map & alike records to map
   public _decorationsMapping : vscode.TextEditorDecorationType[]
-  public _activeColorIndex: number
-  private _extensionUri: vscode.Uri
+  public _activeColorIndex: number //TODO switch to map & alike records to map
   constructor(
     private readonly _extensionContext: vscode.ExtensionContext
   ) {
-    console.log("Initializing ColorsViewProvider")
-    this._extensionUri  = this._extensionContext.extensionUri;
-    this._documentsMapping = this._extensionContext.globalState.get("lcdm", {})// TODO documentSmapping
-    this._colorMapping = this._extensionContext.globalState.get("lccm", ['rgba(255, 0, 0, 0.5)', 'rgba(0, 255, 0, 0.5)', 'rgba(0, 0, 255, 0.5)'])
+    console.log("Constructing provider")
+    this._documentsMapping = this._extensionContext.globalState.get("lcdm", {})
+    this._colorMapping = this._extensionContext.globalState.get("lcca", getColorMapping())
     this._decorationsMapping = []
     for (let i = 0; i <= 2; i++) {
-      this._decorationsMapping.push(this.buildDecorationPreset(this._colorMapping[i]))
+      this._decorationsMapping.push(this.buildDecorationPreset(this._colorMapping[i].hex))
     }
     this._activeColorIndex = 0
     this.initialHighlights()
@@ -73,40 +70,12 @@ export class ColorsViewProvider implements vscode.WebviewViewProvider {
       }
     }
 
-
-  public resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    _context: vscode.WebviewViewResolveContext,
-     _token: vscode.CancellationToken
-    ) {
-        console.log("resolveWebviewView")
-        this._view = webviewView;
-        webviewView.webview.options = {
-          enableScripts : true,
-          localResourceRoots : [this._extensionUri]
-        };
-        webviewView.webview.html = getHTML(webviewView.webview, this._extensionUri)
-
-        // TODO check if these functions have to leave 1 indent level
-        vscode.workspace.onDidChangeTextDocument((doc) => {
-          // from all the text editors search for the 1 holding the document
-          // const textEditor = vscode.window.visibleTextEditors.find((textEditor) => textEditor.document === doc)
-          const textEditor = vscode.window.activeTextEditor // TODO multiple editors possibly holding the document`
-          if (textEditor) {
-            console.log(`pushing to applyHighlights -> ${textEditor?.document.uri.toString()}`)
-            this.applyHighlights(textEditor, textEditor?.document.uri.toString())
-          } else {
-            console.log("Muliple editors holding document")
-          }
-          console.log(`typeof textEditor ${typeof  textEditor}`)
-        })
-
-        webviewView.webview.onDidReceiveMessage((data) => {
-          console.log(`call recieved:  ${data.type} ${data.colorIndex}`)
-          if ((data.type =="setHighlighActivation") && (data.colorIndex >= 0)) {
-           this._activeColorIndex = data.colorIndex
-          }
-        });
+  public switchActiveColor() {
+    if (this._activeColorIndex  < 2){
+      this._activeColorIndex += 1
+    } else {
+         this._activeColorIndex = 0
+    }
   }
 
   private updateMapping(activefile:string, lines:Array<number>, colorIndex:number) {

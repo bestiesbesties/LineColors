@@ -12,15 +12,16 @@ This extension is only visual and does not change your files or code.
 
 ## Features
 - Color any line in the texteditor to red, green or blue.
-- Simple square UI (Inside explorer view)
+- See active color info in statusbar.
 - Automatically shift colored lines with performed text insertions or deletions.
-- Automatically save colored lines linked to files in global state.
+- Automatically save colored lines linked to files in globalstate.
 
 ## Commands
 |Command|Description|Keybind|
 |-|-|-|
 |lineColors.drop|Drop the selected color from the UI to the active selection in the texteditor.|ctrl + d|
-|lineColors.reset|Reset the entire state of the extension, thus clearing coloring on all colored lines.|
+|lineColors.switch|Iterate between dropable colors chronologically.|ctrl + shift + d|
+|lineColors.reset|Reset the entire state of the extension, thus clearing coloring on all lines.|
 
 ## References
 <small>
@@ -36,5 +37,9 @@ https://code.visualstudio.com/api/working-with-extensions/publishing-extension
 https://code.visualstudio.com/api/references/extension-manifest
 
 https://code.visualstudio.com/api/references/vscode-api#TextDocumentChangeEvent
+
+https://code.visualstudio.com/api/references/icons-in-labels#icon-listing
+
+https://code.visualstudio.com/api/ux-guidelines/status-bar
 </small>
 
