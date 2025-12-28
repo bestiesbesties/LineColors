@@ -14,7 +14,7 @@
   },
   "categories": ["Other", "Visualization", "Themes"],
   "extensionKind": ["ui", "workspace"],
-  "activationEvents": [],
+  "activationEvents": ["onStartupFinished"],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
  	"contributes": {
@@ -24,20 +24,15 @@
         "title": "LineColors: Reset"
       }
     ],
-		"views": {
-			"explorer": [
-				{
-          "icon" : "./img/LineColors_icon_128x128.png",
-					"type": "webview",
-					"id": "lineColors.colorsView",
-					"name": "Line Colors"
-				}
-			]
-		},
     "keybindings" : [
       {
         "command": "lineColors.drop",
         "key": "ctrl+d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "lineColors.switch",
+        "key": "ctrl+shift+d",
         "when": "editorTextFocus"
       }
     ]
