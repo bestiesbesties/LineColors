@@ -47,7 +47,10 @@ export class Provider {
     private buildDecorationPreset(color:string) {
       return vscode.window.createTextEditorDecorationType({
         isWholeLine: true, // TODO Document that a whole line is not forced and holds potential
-        backgroundColor: color
+        color : undefined, // TODO Document potential for foreground color support
+        backgroundColor: color,
+        overviewRulerColor : color,
+        overviewRulerLane: vscode.OverviewRulerLane.Full
         });
     }
 
