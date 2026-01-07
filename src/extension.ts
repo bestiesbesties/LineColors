@@ -63,9 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidRenameFiles((fileRenameEvent) => {
       console.log("Recieved file name change")
-      if (fileRenameEvent.files.length > 0) {
-            provider.fileNameUpdate(fileRenameEvent)
-      }
+      provider.fileNameUpdate(fileRenameEvent)
     })
   )
 

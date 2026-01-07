@@ -117,12 +117,14 @@ export class Provider {
   }
 
   public fileNameUpdate(fileRenameEvent:vscode.FileRenameEvent){
-    fileRenameEvent.files.forEach((file) => {
-      const newUri = file.newUri.toString()
-      const oldUri = file.oldUri.toString()
-      this._documentsMapping[newUri] = this._documentsMapping[oldUri]
-      delete this._documentsMapping[oldUri]
-    })
-    this._extensionContext.globalState.update("lcdm", this._documentsMapping)
+    if (fileRenameEvent.files.length > 0) {
+      fileRenameEvent.files.forEach((file) => {
+        const newUri = file.newUri.toString()
+        const oldUri = file.oldUri.toString()
+        this._documentsMapping[newUri] = this._documentsMapping[oldUri]
+        delete this._documentsMapping[oldUri]
+      })
+      this._extensionContext.globalState.update("lcdm", this._documentsMapping)
+    }
   }
 }
