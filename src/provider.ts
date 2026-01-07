@@ -127,4 +127,16 @@ export class Provider {
       this._extensionContext.globalState.update("lcdm", this._documentsMapping)
     }
   }
+
+  public switchCursorColor(){
+    const config = vscode.workspace.getConfiguration();
+    const current = config.get("workbench.colorCustomizations") || {};
+    const updated = { ...current, "editorCursor.foreground": this._colorMapping[this._activeColorIndex].hex.slice(0, 7) + "FF" };
+
+    config.update(
+      "workbench.colorCustomizations",
+      updated,
+      vscode.ConfigurationTarget.Global
+    );
+  }
 }
