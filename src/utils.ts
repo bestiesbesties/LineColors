@@ -4,7 +4,6 @@ export function updateStatusBarItem(statusBarItem:vscode.StatusBarItem, color:Re
     statusBarItem.text = `$(list-selection) ${color.name} (${color.hex})`
     statusBarItem.tooltip = "test"
     statusBarItem.show()
-    return statusBarItem
 }
 
 export function getColorMapping(): Record<string, string>[]  {

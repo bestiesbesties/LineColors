@@ -11,10 +11,11 @@ This extension is only visual and does not change your files or code.
 ![demo.gif](https://raw.githubusercontent.com/bestiesbesties/LineColors/main/img/LineColors_demo.gif)
 
 ## Features
-- Color any line in the texteditor to red, green or blue.
-- See active color info in statusbar.
-- Automatically shift colored lines with performed text insertions or deletions.
-- Automatically save colored lines linked to files in globalstate.
+- Colors any line in the texteditor to red, green or blue.
+- Shifts colored lines respective to text insertions or deletions.
+- Saves colored lines to tracked filenames in globalstate.
+- Shows active color as editor cursor & in statusbar.
+- Exposes colored lines in the overviewruler.
 
 ## Commands
 |Command|Description|Keybind|
@@ -41,5 +42,7 @@ https://code.visualstudio.com/api/references/vscode-api#TextDocumentChangeEvent
 https://code.visualstudio.com/api/references/icons-in-labels#icon-listing
 
 https://code.visualstudio.com/api/ux-guidelines/status-bar
+
+https://code.visualstudio.com/api/references/vscode-api#FileRenameEvent
 </small>
 

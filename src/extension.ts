@@ -29,11 +29,12 @@ export function activate(context: vscode.ExtensionContext) {
       console.log("Switching active color")
       provider.switchActiveColor()
       console.log(provider._colorMapping[provider._activeColorIndex])
-    // Note*: only the following background colors are supported:
-		 //`new ThemeColor('statusBarItem.errorBackground')`
-		 //`new ThemeColor('statusBarItem.warningBackground')`
-    // More background colors may be supported in the future.
-    statusBarItem = updateStatusBarItem(statusBarItem, provider._colorMapping[provider._activeColorIndex])
+      // Note*: only the following background colors are supported:
+      //`new ThemeColor('statusBarItem.errorBackground')`
+      //`new ThemeColor('statusBarItem.warningBackground')`
+      // More background colors may be supported in the future.
+      updateStatusBarItem(statusBarItem, provider._colorMapping[provider._activeColorIndex])
+      provider.switchCursorColor()
     })
   )
 
@@ -57,6 +58,13 @@ export function activate(context: vscode.ExtensionContext) {
         provider.shift(shiftStatus)
         provider.applyHighlights(activeEditor, shiftStatus.fp)
       }
+    })
+  )
+
+  context.subscriptions.push(
+    vscode.workspace.onDidRenameFiles((fileRenameEvent) => {
+      console.log("Recieved file name change")
+      provider.fileNameUpdate(fileRenameEvent)
     })
   )
 

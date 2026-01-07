@@ -47,7 +47,10 @@ export class Provider {
     private buildDecorationPreset(color:string) {
       return vscode.window.createTextEditorDecorationType({
         isWholeLine: true, // TODO Document that a whole line is not forced and holds potential
-        backgroundColor: color
+        color : undefined, // TODO Document potential for foreground color support
+        backgroundColor: color,
+        overviewRulerColor : color,
+        overviewRulerLane: vscode.OverviewRulerLane.Full
         });
     }
 
@@ -98,18 +101,42 @@ export class Provider {
       console.log("line", line)
       this.lineInDocumentMapping(fp, line)
       this.updateMapping(fp, [line, line], this._activeColorIndex)
-    }
-    }
-
-    private lineInDocumentMapping(file:string, line:Number) {
-      console.log("lineInDocumentMapping")
-      const documentMapping = this._documentsMapping[file]
-      if (documentMapping) {
-        for (const key of Object.keys(documentMapping)) {
-          if (Number(key) == line) {
-            console.log("already existing")
-          }
       }
     }
+
+  private lineInDocumentMapping(file:string, line:Number) {
+    console.log("lineInDocumentMapping")
+    const documentMapping = this._documentsMapping[file]
+    if (documentMapping) {
+      for (const key of Object.keys(documentMapping)) {
+        if (Number(key) == line) {
+          console.log("already existing")
+        }
+      }
+    }
+  }
+
+  public fileNameUpdate(fileRenameEvent:vscode.FileRenameEvent){
+    if (fileRenameEvent.files.length > 0) {
+      fileRenameEvent.files.forEach((file) => {
+        const newUri = file.newUri.toString()
+        const oldUri = file.oldUri.toString()
+        this._documentsMapping[newUri] = this._documentsMapping[oldUri]
+        delete this._documentsMapping[oldUri]
+      })
+      this._extensionContext.globalState.update("lcdm", this._documentsMapping)
+    }
+  }
+
+  public switchCursorColor(){
+    const config = vscode.workspace.getConfiguration();
+    const current = config.get("workbench.colorCustomizations") || {};
+    const updated = { ...current, "editorCursor.foreground": this._colorMapping[this._activeColorIndex].hex.slice(0, 7) + "FF" };
+
+    config.update(
+      "workbench.colorCustomizations",
+      updated,
+      vscode.ConfigurationTarget.Global
+    );
   }
 }
