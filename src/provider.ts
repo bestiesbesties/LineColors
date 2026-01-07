@@ -101,18 +101,28 @@ export class Provider {
       console.log("line", line)
       this.lineInDocumentMapping(fp, line)
       this.updateMapping(fp, [line, line], this._activeColorIndex)
-    }
-    }
-
-    private lineInDocumentMapping(file:string, line:Number) {
-      console.log("lineInDocumentMapping")
-      const documentMapping = this._documentsMapping[file]
-      if (documentMapping) {
-        for (const key of Object.keys(documentMapping)) {
-          if (Number(key) == line) {
-            console.log("already existing")
-          }
       }
     }
+
+  private lineInDocumentMapping(file:string, line:Number) {
+    console.log("lineInDocumentMapping")
+    const documentMapping = this._documentsMapping[file]
+    if (documentMapping) {
+      for (const key of Object.keys(documentMapping)) {
+        if (Number(key) == line) {
+          console.log("already existing")
+        }
+      }
+    }
+  }
+
+  public fileNameUpdate(fileRenameEvent:vscode.FileRenameEvent){
+    fileRenameEvent.files.forEach((file) => {
+      const newUri = file.newUri.toString()
+      const oldUri = file.oldUri.toString()
+      this._documentsMapping[newUri] = this._documentsMapping[oldUri]
+      delete this._documentsMapping[oldUri]
+    })
+    this._extensionContext.globalState.update("lcdm", this._documentsMapping)
   }
 }
