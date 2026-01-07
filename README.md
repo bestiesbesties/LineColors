@@ -12,9 +12,10 @@ This extension is only visual and does not change your files or code.
 
 ## Features
 - Color any line in the texteditor to red, green or blue.
-- See active color info in statusbar.
 - Automatically shift colored lines with performed text insertions or deletions.
-- Automatically save colored lines linked to files in globalstate.
+- Automatically save colored lines linked to tracked filenames in globalstate.
+- Overview of colored lines in the overviewruler.
+- See active color info in statusbar.
 
 ## Commands
 |Command|Description|Keybind|
